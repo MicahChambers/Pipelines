@@ -1,18 +1,32 @@
 #!/bin/bash 
 
-echo "This script must be SOURCED to correctly setup the environment prior to running any of the other HCP scripts contained here"
+#echo "This script must be SOURCED to correctly setup the environment prior to running any of the other HCP scripts contained here"
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+	DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+	SOURCE="$(readlink "$SOURCE")"
+	# if $SOURCE was a relative symlink, we need to resolve it relative to the
+	#path where the symlink file was located
+	[[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" 
+done
+DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+export HCPPIPEDIR=$DIR
 
 # Set up FSL (if not already done so in the running environment)
-#FSLDIR=/usr/share/fsl/5.0
-#. ${FSLDIR}/etc/fslconf/fsl.sh
+if [ ! -d $FSLDIR ]; then
+	FSLDIR=/usr/local/fsl-5.0.7_64bit/
+fi
+source ${FSLDIR}/etc/fslconf/fsl.sh
 
 # Set up FreeSurfer (if not already done so in the running environment)
-#FREESURFER_HOME=/usr/local/bin/freesurfer
-#. ${FREESURFER_HOME}/SetUpFreeSurfer.sh > /dev/null 2>&1
+if [ ! -d $FREESURFER_HOME ]; then
+	export FREESURFER_HOME=/usr/local/freesurfer-5.3.0/
+fi
+${FREESURFER_HOME}/SetUpFreeSurfer.sh 
 
-# Set up specific environment variables for the HCP Pipeline
-export HCPPIPEDIR=${HOME}/projects/Pipelines
-export CARET7DIR=${HOME}/workbench/bin_linux64
+if [ ! -d $CARET7DIR ]; then
+	export CARET7DIR=/ifs/students/mchambers/connectome-workbench-1.0/bin_rh_linux64
+fi
 
 export HCPPIPEDIR_Templates=${HCPPIPEDIR}/global/templates
 export HCPPIPEDIR_Bin=${HCPPIPEDIR}/global/binaries
@@ -71,4 +85,7 @@ export MSMBin=${HCPPIPEDIR}/MSMBinaries
 
 #echo "Unsetting SGE_ROOT for testing mode only"
 #unset SGE_ROOT
+
+PATH=/ifs/students/mchambers/anaconda/bin:$PATH
+PYTHONPATH="/ifs/students/mchambers/anaconda/"
 
