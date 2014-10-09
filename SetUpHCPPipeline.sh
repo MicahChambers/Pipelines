@@ -13,18 +13,18 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 export HCPPIPEDIR=$DIR
 
 # Set up FSL (if not already done so in the running environment)
-if [ ! -d $FSLDIR ]; then
+if [ ! -d "$FSLDIR" ]; then
 	FSLDIR=/usr/local/fsl-5.0.7_64bit/
 fi
 source ${FSLDIR}/etc/fslconf/fsl.sh
 
 # Set up FreeSurfer (if not already done so in the running environment)
-if [ ! -d $FREESURFER_HOME ]; then
+if [ ! -d "$FREESURFER_HOME" ]; then
 	export FREESURFER_HOME=/usr/local/freesurfer-5.3.0/
 fi
 ${FREESURFER_HOME}/SetUpFreeSurfer.sh 
 
-if [ ! -d $CARET7DIR ]; then
+if [ ! -d "$CARET7DIR" ]; then
 	export CARET7DIR=/ifs/students/mchambers/connectome-workbench-1.0/bin_rh_linux64
 fi
 

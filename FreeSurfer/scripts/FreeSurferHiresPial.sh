@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 echo -e "\n START: FreeSurferHighResPial"
+env
 
 SubjectID="$1"
 SubjectDIR="$2"

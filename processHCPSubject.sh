@@ -9,11 +9,8 @@ if [ $# != 3 ]; then
 	exit -1
 fi
 
-echo Study Folder: $StudyFolder
-echo Subject Id: $SubjectId
-StudyFolder=`readlink -f $StudyFolder`/$SubjectId
+StudyFolder=`readlink -f $StudyFolder`
 SourceDir=`readlink -f $SourceDir`
-echo Subject Folder: $
 
 source $HCPPIPEDIR/SetUpHCPPipeline.sh
 source $HCPPIPEDIR/HCPDefaults.sh
@@ -39,47 +36,47 @@ if [ "$T1wInputImages" == "" ] || [ "$T2wInputImages" == "" ] ||
 	exit -1
 fi
 
->&2 echo "Pre-Freesurfer"
-echo Pre-Freesurfer
-${HCPPIPEDIR}/PreFreeSurfer/PreFreeSurferPipeline.sh \
- --path="$StudyFolder/$SubjectId" \
- --SubjectId="$SubjectId" \
- --t1="$T1wInputImages" \
- --t2="$T2wInputImages" \
- --t1template="$T1wTemplate" \
- --t1templatebrain="$T1wTemplateBrain" \
- --t1template2mm="$T1wTemplate2mm" \
- --t2template="$T2wTemplate" \
- --t2templatebrain="$T2wTemplateBrain" \
- --t2template2mm="$T2wTemplate2mm" \
- --templatemask="$TemplateMask" \
- --template2mmmask="$Template2mmMask" \
- --brainsize="$BrainSize" \
- --fnirtconfig="$FNIRTConfig" \
- --fmapmag="$MagnitudeInputName" \
- --fmapphase="$PhaseInputName" \
- --echodiff="$TE" \
- --SEPhaseNeg="NONE" \
- --SEPhasePos="NONE" \
- --echospacing="NONE" \
- --seunwarpdir="NONE" \
- --t1samplespacing="$T1wSampleSpacing" \
- --t2samplespacing="$T2wSampleSpacing" \
- --unwarpdir="$T1UnwarpDir" \
- --gdcoeffs="$GradientDistortionCoeffs" \
- --avgrdcmethod="$AvgrdcSTRING" \
- --topupconfig="NONE" \
- --printcom=$PRINTCOM
-
+#>&2 echo "Pre-Freesurfer"
+#echo Pre-Freesurfer
+#${HCPPIPEDIR}/PreFreeSurfer/PreFreeSurferPipeline.sh \
+# --path="$StudyFolder/$SubjectId" \
+# --SubjectId="$SubjectId" \
+# --t1="$T1wInputImages" \
+# --t2="$T2wInputImages" \
+# --t1template="$T1wTemplate" \
+# --t1templatebrain="$T1wTemplateBrain" \
+# --t1template2mm="$T1wTemplate2mm" \
+# --t2template="$T2wTemplate" \
+# --t2templatebrain="$T2wTemplateBrain" \
+# --t2template2mm="$T2wTemplate2mm" \
+# --templatemask="$TemplateMask" \
+# --template2mmmask="$Template2mmMask" \
+# --brainsize="$BrainSize" \
+# --fnirtconfig="$FNIRTConfig" \
+# --fmapmag="$MagnitudeInputName" \
+# --fmapphase="$PhaseInputName" \
+# --echodiff="$TE" \
+# --SEPhaseNeg="NONE" \
+# --SEPhasePos="NONE" \
+# --echospacing="NONE" \
+# --seunwarpdir="NONE" \
+# --t1samplespacing="$T1wSampleSpacing" \
+# --t2samplespacing="$T2wSampleSpacing" \
+# --unwarpdir="$T1UnwarpDir" \
+# --gdcoeffs="$GradientDistortionCoeffs" \
+# --avgrdcmethod="$AvgrdcSTRING" \
+# --topupconfig="NONE" \
+# --printcom=$PRINTCOM
+#
 >&2 echo "Freesurfer"
 echo FreeSurfer Processing
 ${HCPPIPEDIR}/FreeSurfer/FreeSurferPipeline.sh \
- --SubjectDIR="$StudyFolder" \
+ --subjectDIR="$StudyFolder/$SubjectId" \
  --subject="$SubjectId" \
- --T1wImage="$StudyFolder"/"$SubjectId"/T1w/T1w.nii.gz \
- --T1wImageBrain="$StudyFolder"/"$SubjectId"/T1w/BrainExtraction_FNIRTbased \
- --T2wImage="$StudyFolder"/"$SubjectId"/T2w/T2w.nii.gz
-#
+ --t1="$StudyFolder"/"$SubjectId"/T1w/T1w.nii.gz \
+ --t1brain="$StudyFolder"/"$SubjectId"/T1w/T1w_acpc_brain.nii.gz \
+ --t2="$StudyFolder"/"$SubjectId"/T2w/T2w.nii.gz
+
 #>&2 echo "Post-Freesurfer"
 #echo Post-FreeSurfer Processing
 #${HCPPIPEDIR}/PostFreeSurfer/PostFreeSurferPipeline.sh \
