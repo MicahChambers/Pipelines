@@ -64,17 +64,17 @@ GradientDistortionCoeffs="NONE" # Set to NONE to skip gradient distortion correc
 # DICOM field (0019,1028) = BandwidthPerPixelPhaseEncode
 # DICOM field (0051,100b) AcquisitionMatrixText first value (# of phase encoding # samples)
 # On Siemens, iPAT/GRAPPA factors have already been accounted for.
-EchoSpacing=0.78 
+DWI_EchoSpacing=0.78 
 
 # 1 for Left-Right Phase Encoding, 
 # 2 for Anterior-Posterior
-PEdir=1 
+DWI_PEdir=1 
 
 # Config Settings
 # Gdcoeffs="${HCPPIPEDIR_Config}/coeff_SC72C_Skyra.grad" 
 # Coefficients that describe spatial variations of the scanner gradients. 
 # Use NONE if not available.
-Gdcoeffs="NONE" 
+DWI_Gdcoeffs="NONE" 
 
 #################################################################
 # Post Freesurfer
@@ -108,24 +108,55 @@ RegName="FS"
 # Echo Spacing or Dwelltime of fMRI image, set to NONE if not used. 
 # Dwelltime = # 1/(BandwidthPerPixelPhaseEncode * # of phase encoding samples)
 # DICOM field # (0019,1028) = BandwidthPerPixelPhaseEncode
-# DICOM field (0051,100b) = AcquisitionMatrixText first value (# of phase encoding samples)
+# DICOM field (0051,100b) = AcquisitionMatrixText first value 
+#							(# of phase encoding samples)
 # On Siemens iPAT/GRAPPA factors have already been accounted for.
-FMRIDwellTime="0.00058" 
-FMRIPhaseEncodinglist="x x-" #x for RL, x- for LR, y for PA, y- for AP
-FMRIUnwarpDir=`echo $FMRIPhaseEncodinglist | cut -d " " -f $i`
+FMRI_DwellTime="0.00058" 
+
+#x for RL, x- for LR, y for PA, y- for AP
+FMRI_PhaseEncodinglist="x x-" 
+FMRI_UnwarpDir=`echo $FMRI_PhaseEncodinglist | cut -d " " -f $i`
 
 # FIELDMAP or TOPUP, distortion correction is required for accurate processing
-FMRIDistortionCorrection="TOPUP" 
+FMRI_DistortionCorrection="TOPUP" 
 
 # Target final resolution of fMRI data. 
 # 2mm is recommended for 3T HCP data,
 # 1.6mm for 7T HCP data (i.e. should match acquired resolution).
 # Use 2.0 or 1.0 to avoid standard FSL templates
-FinalFMRIResolution="2" 
+FMRI_FinalResolution="2" 
 
 # Gradient distortion correction coefficents, set to NONE to turn off
 #GradientDistortionCoeffs="${HCPPIPEDIR_Config}/coeff_SC72C_Skyra.grad" 
 GradientDistortionCoeffs="NONE" # SEt to NONE to skip gradient distortion correction
 
-TopUpConfig="${HCPPIPEDIR_Config}/b02b0.cnf" #Topup config if using TOPUP, set to NONE if using regular FIELDMAP
+#Topup config if using TOPUP, set to NONE if using regular FIELDMAP
+FMRI_TopUpConfig="${HCPPIPEDIR_Config}/b02b0.cnf" 
+
+#Delimit runs with @ and tasks with space
+LevelOneTasksList="tfMRI_EMOTION_RL@tfMRI_EMOTION_LR" 
+LevelOneFSFsList="tfMRI_EMOTION_RL@tfMRI_EMOTION_LR" 
+LevelTwoTaskList="tfMRI_EMOTION" 
+LevelTwoFSFList="tfMRI_EMOTION" 
+
+# Space delimited list for setting different final smoothings.  2mm is no more
+# smoothing (above minimal preprocessing pipelines grayordinates smoothing).
+SmoothingList="2" 
+
+# 32 if using HCP minimal preprocessing pipeline outputs
+LowResMesh="32" 
+GrayOrdinatesResolution="2" 
+OriginalSmoothingFWHM="2" 
+
+# File located in ${SubjectID}/MNINonLinear/Results/${fMRIName} or NONE
+Confound="NONE" 
+
+#Use 2000 for linear detrend, 200 is default for HCP task fMRI
+TemporalFilter="200" 
+
+# YES or NO. CAUTION: Only use YES if you want unconstrained volumetric
+# blurring of your data, otherwise set to NO for faster, less biased, and more
+# senstive processing (grayordinates results do not use unconstrained
+# volumetric blurring and are always produced).  
+VolumeBasedProcessing="NO" 
 
