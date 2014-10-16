@@ -1,5 +1,4 @@
 #!/bin/bash
-set -x
 SubjectId=$1
 SourceDir=$2
 StudyFolder=$3
@@ -71,11 +70,11 @@ ${HCPPIPEDIR}/PreFreeSurfer/PreFreeSurferPipeline.sh \
 >&2 echo "Freesurfer"
 echo FreeSurfer Processing
 ${HCPPIPEDIR}/FreeSurfer/FreeSurferPipeline.sh \
- --subjectDIR="$StudyFolder/$SubjectId/T1w/" \
  --subject="$SubjectId" \
- --t1="$StudyFolder"/"$SubjectId"/T1w/T1w.nii.gz \
- --t1brain="$StudyFolder"/"$SubjectId"/T1w/T1w_acpc_brain.nii.gz \
- --t2="$StudyFolder"/"$SubjectId"/T2w/T2w.nii.gz
+ --subjectDIR="$StudyFolder/$SubjectId/T1w/" \
+ --t1="$StudyFolder"/"$SubjectId"/T1w/T1w_acpc_dc_restore.nii.gz \
+ --t1brain="$StudyFolder"/"$SubjectId"/T1w/T1w_acpc_dc_restore_brain.nii.gz \
+ --t2="$StudyFolder"/"$SubjectId"/T1w/T2w_acpc_dc_restore.nii.gz
 
 >&2 echo "Post-Freesurfer"
 echo Post-FreeSurfer Processing
