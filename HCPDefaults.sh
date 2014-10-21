@@ -113,10 +113,6 @@ RegName="FS"
 # On Siemens iPAT/GRAPPA factors have already been accounted for.
 FMRI_DwellTime="0.00058" 
 
-#x for RL, x- for LR, y for PA, y- for AP
-FMRI_PhaseEncodinglist="x x-" 
-FMRI_UnwarpDir=`echo $FMRI_PhaseEncodinglist | cut -d " " -f $i`
-
 # FIELDMAP or TOPUP, distortion correction is required for accurate processing
 FMRI_DistortionCorrection="TOPUP" 
 
