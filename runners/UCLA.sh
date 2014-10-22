@@ -15,7 +15,6 @@ StudyFolder=`readlink -f $StudyFolder`
 SourceDir=`readlink -f $SourceDir`
 
 source $HCPPIPEDIR/SetUpHCPPipeline.sh
-source $HCPPIPEDIR/UCLADefaults.sh
 
 # Convert Images From Dicom
 for dd in `ls -d $SourceDir/$SubjectId/*`; do
@@ -34,6 +33,8 @@ for dd in `ls -d $SourceDir/$SubjectId/*`; do
 		mv $StudyFolder/$SubjectId/nii/$oname.bval $StudyFolder/$SubjectId/nii/`basename $dd`.bval
 	fi
 done
+
+source $HCPPIPEDIR/UCLADefaults.sh
 
 if [[ ! "$MULTIINPUTS" == "true" ]]; then
 	T1wInputImages="${T1wInputImages%@*}"

@@ -79,7 +79,6 @@ T1T2_SE_PhasePosImages=`ls $StudyFolder/$SubjectId/nii/*SPINECHOFIELDMAP*PA*.nii
 # BandwidthPerPixelPhaseEncode = DICOM field (0019,1028)
 # #phase encoding samples = DICOM field (0051,100b) first value
 # On Siemens, iPAT/GRAPPA factors have already been accounted for.  
-# TODO, this might be 1000/() for siemens?
 T1T2_SE_DwellTime="0.00058" 
 
 ## Direction 
@@ -103,7 +102,7 @@ DWI_PosImages=`ls $StudyFolder/$SubjectId/nii/*DWI*DIR98PA.nii.gz | xargs | tr '
 # DICOM field (0019,1028) = BandwidthPerPixelPhaseEncode
 # DICOM field (0051,100b) AcquisitionMatrixText first value (# of phase encoding # samples)
 # On Siemens, iPAT/GRAPPA factors have already been accounted for.
-DWI_EchoSpacing=0.69 
+DWI_EchoSpacing=0.00069
 
 # 1 for Left-Right Phase Encoding, 
 # 2 for Anterior-Posterior

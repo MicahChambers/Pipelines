@@ -14,7 +14,8 @@ export HCPPIPEDIR=$DIR
 
 # Set up FSL (if not already done so in the running environment)
 if [ ! -d "$FSLDIR" ]; then
-	FSLDIR=/usr/local/fsl-5.0.7_64bit/
+#	FSLDIR=/usr/local/fsl-5.0.7_64bit/
+	FSLDIR=/usr/local/fsl-5.0.6_64bit/
 fi
 source ${FSLDIR}/etc/fslconf/fsl.sh
 

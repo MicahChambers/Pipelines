@@ -33,8 +33,8 @@ elif [ ${PEdir} -eq 2 ]; then  #AP/PA phase encoding
 fi
 nPEsteps=$(($dimP - 1))                         #If GRAPPA is used this needs to include the GRAPPA factor!
 #Total_readout=Echo_spacing*(#of_PE_steps-1)   
-ro_time=`echo "${echo_spacing} * ${nPEsteps}" | bc -l`
-ro_time=`echo "scale=6; ${ro_time} / 1000" | bc -l`
+ro_time=`scale=6; echo "${echo_spacing} * ${nPEsteps}" | bc -l`
+#ro_time=`echo "scale=6; ${ro_time} / 1000" | bc -l`
 echo "Total readout time is $ro_time secs"
 
 

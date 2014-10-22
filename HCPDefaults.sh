@@ -64,7 +64,7 @@ GradientDistortionCoeffs="NONE" # Set to NONE to skip gradient distortion correc
 # DICOM field (0019,1028) = BandwidthPerPixelPhaseEncode
 # DICOM field (0051,100b) AcquisitionMatrixText first value (# of phase encoding # samples)
 # On Siemens, iPAT/GRAPPA factors have already been accounted for.
-DWI_EchoSpacing=0.78 
+DWI_EchoSpacing=0.00078 
 
 # 1 for Left-Right Phase Encoding, 
 # 2 for Anterior-Posterior
