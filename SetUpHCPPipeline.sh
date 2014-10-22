@@ -28,6 +28,9 @@ if [ ! -d "$CARET7DIR" ]; then
 	export CARET7DIR=/ifs/students/mchambers/connectome-workbench-1.0/bin_rh_linux64
 fi
 
+# Set Up DCM2NII
+export PATH=$PATH:/ifs/students/mchambers/mricron/
+
 export HCPPIPEDIR_Templates=${HCPPIPEDIR}/global/templates
 export HCPPIPEDIR_Bin=${HCPPIPEDIR}/global/binaries
 export HCPPIPEDIR_Config=${HCPPIPEDIR}/global/config

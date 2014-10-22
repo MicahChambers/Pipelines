@@ -1,6 +1,6 @@
 #!/bin/bash
 
-MULTIINPUTS=false
+set -x
 
 SubjectId=$1
 SourceDir=$2
@@ -15,22 +15,35 @@ StudyFolder=`readlink -f $StudyFolder`
 SourceDir=`readlink -f $SourceDir`
 
 source $HCPPIPEDIR/SetUpHCPPipeline.sh
-source $HCPPIPEDIR/HCPDefaults.sh
+source $HCPPIPEDIR/UCLADefaults.sh
 
-if [[ "$MULTIINPUTS" == "true" ]]; then
-	T1wInputImages=`ls $SourceDir/$SubjectId/unprocessed/3T/T1w*/$SubjectId*T1w*.nii.gz | xargs | tr ' ' '@'`;
-	MagnitudeInputName=`ls $SourceDir/$SubjectId/unprocessed/3T/T1w*/$SubjectId*FieldMap_Magnitude.nii.gz | xargs | tr ' ' '@'`;
-	PhaseInputName=`ls $SourceDir/$SubjectId/unprocessed/3T/T1w*/$SubjectId*FieldMap_Phase.nii.gz | xargs | tr ' ' '@'`;
-	T2wInputImages=`ls $SourceDir/$SubjectId/unprocessed/3T/T2w*/$SubjectId*T2w*.nii.gz | xargs | tr ' ' '@'`;
-	DWI_PosData=`ls $SourceDir/$SubjectId/unprocessed/3T/Diffusion/*DWI_dir95_RL.nii.gz | xargs | tr ' ' '@'`;
-	DWI_NegData=`ls $SourceDir/$SubjectId/unprocessed/3T/Diffusion/*DWI_dir95_LR.nii.gz | xargs | tr ' ' '@'`;
-else
-	T1wInputImages=`ls $SourceDir/$SubjectId/unprocessed/3T/T1w*/$SubjectId*T1w*.nii.gz | head -n 1`
-	MagnitudeInputName=`ls $SourceDir/$SubjectId/unprocessed/3T/T1w*/$SubjectId*FieldMap_Magnitude.nii.gz | head -n 1`
-	PhaseInputName=`ls $SourceDir/$SubjectId/unprocessed/3T/T1w*/$SubjectId*FieldMap_Phase.nii.gz | head -n 1`
-	T2wInputImages=`ls $SourceDir/$SubjectId/unprocessed/3T/T2w*/$SubjectId*T2w*.nii.gz | head -n 1`
-	DWI_PosData=`ls $SourceDir/$SubjectId/unprocessed/3T/Diffusion/*DWI_dir95_RL.nii.gz | head -n 1`
-	DWI_NegData=`ls $SourceDir/$SubjectId/unprocessed/3T/Diffusion/*DWI_dir95_LR.nii.gz | head -n 1`
+# Convert Images From Dicom
+for dd in `ls -d $SourceDir/$SubjectId/*`; do
+	fname=$dd/`ls $dd -1 | head -n 1`
+	echo $fname;
+	mkdir -p $StudyFolder/$SubjectId/nii
+	dcm2nii -r n -x n -a n -d n -e n -f y -g y -i n -n y -p n -o $StudyFolder/$SubjectId/nii $fname
+	oname=`basename $fname`
+	oname=${oname%.*}
+	oname=`echo $oname | tr -d '.'`
+	mv $StudyFolder/$SubjectId/nii/$oname.nii.gz $StudyFolder/$SubjectId/nii/`basename $dd`.nii.gz
+	if [[ -e $StudyFolder/$SubjectId/nii/$oname.bvec ]]; then
+		mv $StudyFolder/$SubjectId/nii/$oname.bvec  $StudyFolder/$SubjectId/nii/`basename $dd`.bvec
+	fi
+	if [[ -e $StudyFolder/$SubjectId/nii/$oname.bval ]]; then
+		mv $StudyFolder/$SubjectId/nii/$oname.bval $StudyFolder/$SubjectId/nii/`basename $dd`.bval
+	fi
+done
+
+if [[ ! "$MULTIINPUTS" == "true" ]]; then
+	T1wInputImages="${T1wInputImages%@*}"
+	T2wInputImages="${T2wInputImages%@*}"
+	T1T2_FMAP_PhaseImages="${T1T2_FMAP_PhaseImages%@*}"
+	T1T2_FMAP_MagImages="${T1T2_FMAP_MagImages%@*}"
+	T1T2_SE_PhaseNegImages="${T1T2_SE_PhaseNegImages%@*}"
+	T1T2_SE_PhasePosImages="${T1T2_SE_PhasePosImages%@*}"
+	DWI_NegImages="${DWI_NegImages%@*}"
+	DWI_PosImages="${DWI_posImages%@*}"
 fi
 
 echo $T1wInputImages
@@ -40,10 +53,8 @@ echo $PhaseInputName
 echo $DWI_NegData
 echo $DWI_PosData
 
-if [ "$T1wInputImages" == "" ] || [ "$T2wInputImages" == "" ] ||
-	[ "$MagnitudeInputName" == "" ] || [ "$PhaseInputName" == "" ] ||
-	[ "$DWI_NegData" == "" ] || [ "$DWI_PosData" == "" ] ; then
-	echo "Some Files Not Found"
+if [ "$T1wInputImages" == "" ] ; then
+	echo "T1 input not found"
 	exit -1
 fi
 
@@ -64,19 +75,19 @@ ${HCPPIPEDIR}/PreFreeSurfer/PreFreeSurferPipeline.sh \
  --template2mmmask="$Template2mmMask" \
  --brainsize="$BrainSize" \
  --fnirtconfig="$FNIRTConfig" \
- --fmapmag="$MagnitudeInputName" \
- --fmapphase="$PhaseInputName" \
- --echodiff="$TE" \
- --SEPhaseNeg="NONE" \
- --SEPhasePos="NONE" \
- --echospacing="NONE" \
- --seunwarpdir="NONE" \
+ --fmapmag="$T1T2_FMAP_MagImages" \
+ --fmapphase="$T1T2_FMAP_PhaseImages" \
+ --echodiff="$T1T2_FMAP_TE" \
+ --SEPhaseNeg="$T1T2_SE_PhaseNegImages" \
+ --SEPhasePos="$T1T2_SE_PhasePosImages" \
+ --echospacing="$T1T2_SE_DwellTime" \
+ --seunwarpdir="$T1T2_SE_UnwarpDir" \
+ --topupconfig="$T1T2_SE_TopUpConfig" \
  --t1samplespacing="$T1wSampleSpacing" \
  --t2samplespacing="$T2wSampleSpacing" \
  --unwarpdir="$T1UnwarpDir" \
  --gdcoeffs="$GradientDistortionCoeffs" \
  --avgrdcmethod="$AvgrdcSTRING" \
- --topupconfig="NONE" \
  --printcom=$PRINTCOM
 
 >&2 echo "Freesurfer"
@@ -104,60 +115,62 @@ ${HCPPIPEDIR}/PostFreeSurfer/PostFreeSurferPipeline.sh \
  --regname="$RegName" \
  --printcom=$PRINTCOM
 
->&2 echo "Diffusion Processing"
-echo Diffusion Processing
-${HCPPIPEDIR}/DiffusionPreprocessing/DiffPreprocPipeline.sh \
- --path="${StudyFolder}" \
- --subject="${SubjectId}" \
- --posData="${DWI_PosData}" \
- --negData="${DWI_NegData}" \
- --echospacing="${DWI_EchoSpacing}" \
- --PEdir=${DWI_PEdir} \
- --gdcoeffs="${DWI_Gdcoeffs}" \
- --printcom=$PRINTCOM
+if [[ -e ${DWI_NegImages%@*} ]] && [[ -e ${DWI_PosImages%@*} ]]; then
+	>&2 echo "Diffusion Processing"
+	echo Diffusion Processing
+	${HCPPIPEDIR}/DiffusionPreprocessing/DiffPreprocPipeline.sh \
+	--path="${StudyFolder}" \
+	--subject="${SubjectId}" \
+	--posData="${DWI_PosImages}" \
+	--negData="${DWI_NegImages}" \
+	--echospacing="${DWI_EchoSpacing}" \
+	--PEdir=${DWI_PEdir} \
+	--gdcoeffs="${DWI_Gdcoeffs}" \
+	--printcom=$PRINTCOM
+fi
 
->&2 echo "fMRI Task Processing"
-echo fMRI Task Processing
-
-Tasklist=("tfMRI_EMOTION_RL" "tfMRI_EMOTION_LR")
-PhaseEncodinglist=("x" "x-") #x for RL, x- for LR, y for PA, y- for AP
-for (( i=0; i<${#Tasklist[@]}; i++ )) ; do
-    UnwarpDir=${PhaseEncodinglist[$i]}
-	fMRIName=${Tasklist[$i]}
-
-    fMRITimeSeries="${StudyFolder}/${SubjectId}/unprocessed/3T/${fMRIName}/${SubjectId}_3T_${fMRIName}.nii.gz"
-	
-	# A single band reference image (SBRef) is recommended if using multiband,
-	# set to NONE if you want to use the first volume of the timeseries for
-	# motion correction
-    fMRISBRef="${StudyFolder}/${SubjectId}/unprocessed/3T/${fMRIName}/${SubjectId}_3T_${fMRIName}_SBRef.nii.gz"
-
-	# For the spin echo field map volume with a negative phase encoding
-	# direction (LR in HCP data, AP in 7T HCP data), set to NONE if using
-	# regular FIELDMAP
-    SpinEchoPhaseEncodeNegative="${StudyFolder}/${SubjectId}/unprocessed/3T/${fMRIName}/${SubjectId}_3T_SpinEchoFieldMap_LR.nii.gz"
-    SpinEchoPhaseEncodePositive="${StudyFolder}/${SubjectId}/unprocessed/3T/${fMRIName}/${SubjectId}_3T_SpinEchoFieldMap_RL.nii.gz"
-
-    ${queuing_command} ${HCPPIPEDIR}/fMRIVolume/GenericfMRIVolumeProcessingPipeline.sh \
-      --path=${StudyFolder} \
-      --subject=${SubjectId} \
-      --fmriname=${fMRIName} \
-      --fmritcs=${fMRITimeSeries} \
-      --fmriscout=${fMRISBRef} \
-      --SEPhaseNeg=${SpinEchoPhaseEncodeNegative} \
-      --SEPhasePos=${SpinEchoPhaseEncodePositive} \
-      --fmapmag="NONE" \
-      --fmapphase="NONE" \
-      --echospacing=${FMRI_DwellTime} \
-      --echodiff="NONE" \
-      --unwarpdir=${UnwarpDir} \
-      --fmrires=${FMRI_FinalResolution} \
-      --dcmethod="TOPUP" \
-      --gdcoeffs="NONE"\
-      --topupconfig=$FMRI_TopUpConfig \
-      --printcom=$PRINTCOM
-done
-
+#>&2 echo "fMRI Task Processing"
+#echo fMRI Task Processing
+#
+#Tasklist=("RFMRI_REST_AP_FIRST" "RFMRI_REST_AP_SECOND" "RFMRI_REST_AP_" "RFMRI_REST_AP")
+#PhaseEncodinglist=("y" "y" "y-" "y-") #x for RL, x- for LR, y for PA, y- for AP
+#for (( i=0; i<${#Tasklist[@]}; i++ )) ; do
+#    UnwarpDir=${PhaseEncodinglist[$i]}
+#	fMRIName=${Tasklist[$i]}
+#
+#    fMRITimeSeries="$StudyFolder/$SubjectId/nii/${fMRIName}/${SubjectId}_3T_${fMRIName}.nii.gz"
+#	
+#	# A single band reference image (SBRef) is recommended if using multiband,
+#	# set to NONE if you want to use the first volume of the timeseries for
+#	# motion correction
+#    fMRISBRef="${StudyFolder}/${SubjectId}/unprocessed/3T/${fMRIName}/${SubjectId}_3T_${fMRIName}_SBRef.nii.gz"
+#
+#	# For the spin echo field map volume with a negative phase encoding
+#	# direction (LR in HCP data, AP in 7T HCP data), set to NONE if using
+#	# regular FIELDMAP
+#    SpinEchoPhaseEncodeNegative="${StudyFolder}/${SubjectId}/unprocessed/3T/${fMRIName}/${SubjectId}_3T_SpinEchoFieldMap_LR.nii.gz"
+#    SpinEchoPhaseEncodePositive="${StudyFolder}/${SubjectId}/unprocessed/3T/${fMRIName}/${SubjectId}_3T_SpinEchoFieldMap_RL.nii.gz"
+#
+#    ${queuing_command} ${HCPPIPEDIR}/fMRIVolume/GenericfMRIVolumeProcessingPipeline.sh \
+#      --path=${StudyFolder} \
+#      --subject=${SubjectId} \
+#      --fmriname=${fMRIName} \
+#      --fmritcs=${fMRITimeSeries} \
+#      --fmriscout=${fMRISBRef} \
+#      --SEPhaseNeg=${SpinEchoPhaseEncodeNegative} \
+#      --SEPhasePos=${SpinEchoPhaseEncodePositive} \
+#      --fmapmag="NONE" \
+#      --fmapphase="NONE" \
+#      --echospacing=${FMRI_DwellTime} \
+#      --echodiff="NONE" \
+#      --unwarpdir=${UnwarpDir} \
+#      --fmrires=${FMRI_FinalResolution} \
+#      --dcmethod="TOPUP" \
+#      --gdcoeffs="NONE"\
+#      --topupconfig=$FMRI_TopUpConfig \
+#      --printcom=$PRINTCOM
+#done
+#
 # MOVE TO MULTI SUBJECT
 #for FinalSmoothingFWHM in $SmoothingList ; do
 #  echo $FinalSmoothingFWHM

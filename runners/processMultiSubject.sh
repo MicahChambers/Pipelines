@@ -20,7 +20,8 @@ infile=`readlink -f $1`
 StudyFolder=`readlink -f $2`
 PIPE="$3"
 
-if [[ "$PIPE"=="" ]]; then
+echo $PIPE
+if [[ "$PIPE" == "" ]]; then
 	PIPE=HCP
 fi
 
