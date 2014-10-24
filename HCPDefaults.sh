@@ -41,7 +41,7 @@ T2wSampleSpacing="0.0000021"
 
 # z appears to be best or 
 # "NONE" if not used
-T1UnwarpDir="z" 
+T1UnwarpDir="y" 
 
 ###############################################################################
 #Other Config Settings

@@ -1,13 +1,13 @@
 #!/bin/bash
-set -x
 
 export HCPPIPEDIR=/ifs/students/mchambers/hcp_pipeline
 source $HCPPIPEDIR/SetUpHCPPipeline.sh
 
 #queuing_command="qsub -b "
-queuing_command="qsub -l h_vmem=8G -b yes -v HCPPIPEDIR=$HCPPIPEDIR -wd $PWD/$2"
+queuing_command="qsub"
+qsub_opts="-l h_vmem=8G -b yes -v HCPPIPEDIR=$HCPPIPEDIR"
 
-if [ $# != 2 && $# != 3] ; then
+if [[ "$#" != 2 ]] && [[ "$#" != 3 ]] ; then
 	echo "Usage:"
 	echo $0 inputlistfile studyfolder pipeline
 	echo "inputlist: file should just be a list of paths to subject input directories"
@@ -36,6 +36,12 @@ if [ ! -d "$StudyFolder" ]; then
 fi
 
 cat $infile | while read line; do 
-	echo $queuing_command $HCPPIPEDIR/runners/$PIPE.sh `basename $line` `dirname $line` $StudyFolder
-	$queuing_command $HCPPIPEDIR/runners/$PIPE.sh `basename $line` `dirname $line` $StudyFolder
+	sub=""
+	opath="$StudyFolder"/`basename $line`
+	mkdir -p $opath
+	if [[ "$queuing_command" == "qsub" ]]; then
+		subcmd="$queuing_command $qsub_opts -wd $opath -o $opath -e $opath"
+	fi
+	echo $subcmd $HCPPIPEDIR/runners/$PIPE.sh `basename $line` `dirname $line` $StudyFolder
+	$subcmd $HCPPIPEDIR/runners/$PIPE.sh `basename $line` `dirname $line` $StudyFolder
 done

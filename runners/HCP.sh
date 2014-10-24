@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+## TODO add indicators for DONE sections, then only re-run if --force is given
 MULTIINPUTS=false
 
 SubjectId=$1
@@ -19,29 +21,22 @@ source $HCPPIPEDIR/HCPDefaults.sh
 
 if [[ "$MULTIINPUTS" == "true" ]]; then
 	T1wInputImages=`ls $SourceDir/$SubjectId/unprocessed/3T/T1w*/$SubjectId*T1w*.nii.gz | xargs | tr ' ' '@'`;
-	MagnitudeInputName=`ls $SourceDir/$SubjectId/unprocessed/3T/T1w*/$SubjectId*FieldMap_Magnitude.nii.gz | xargs | tr ' ' '@'`;
-	PhaseInputName=`ls $SourceDir/$SubjectId/unprocessed/3T/T1w*/$SubjectId*FieldMap_Phase.nii.gz | xargs | tr ' ' '@'`;
+	T1T2_FMAP_MagImages=`ls $SourceDir/$SubjectId/unprocessed/3T/T1w*/$SubjectId*FieldMap_Magnitude.nii.gz | xargs | tr ' ' '@'`;
+	T1T2_FMAP_PhaseImages=`ls $SourceDir/$SubjectId/unprocessed/3T/T1w*/$SubjectId*FieldMap_Phase.nii.gz | xargs | tr ' ' '@'`;
 	T2wInputImages=`ls $SourceDir/$SubjectId/unprocessed/3T/T2w*/$SubjectId*T2w*.nii.gz | xargs | tr ' ' '@'`;
 	DWI_PosData=`ls $SourceDir/$SubjectId/unprocessed/3T/Diffusion/*DWI_dir95_RL.nii.gz | xargs | tr ' ' '@'`;
 	DWI_NegData=`ls $SourceDir/$SubjectId/unprocessed/3T/Diffusion/*DWI_dir95_LR.nii.gz | xargs | tr ' ' '@'`;
 else
 	T1wInputImages=`ls $SourceDir/$SubjectId/unprocessed/3T/T1w*/$SubjectId*T1w*.nii.gz | head -n 1`
-	MagnitudeInputName=`ls $SourceDir/$SubjectId/unprocessed/3T/T1w*/$SubjectId*FieldMap_Magnitude.nii.gz | head -n 1`
-	PhaseInputName=`ls $SourceDir/$SubjectId/unprocessed/3T/T1w*/$SubjectId*FieldMap_Phase.nii.gz | head -n 1`
+	T1T2_FMAP_MagImages=`ls $SourceDir/$SubjectId/unprocessed/3T/T1w*/$SubjectId*FieldMap_Magnitude.nii.gz | head -n 1`
+	T1T2_FMAP_PhaseImages=`ls $SourceDir/$SubjectId/unprocessed/3T/T1w*/$SubjectId*FieldMap_Phase.nii.gz | head -n 1`
 	T2wInputImages=`ls $SourceDir/$SubjectId/unprocessed/3T/T2w*/$SubjectId*T2w*.nii.gz | head -n 1`
 	DWI_PosData=`ls $SourceDir/$SubjectId/unprocessed/3T/Diffusion/*DWI_dir95_RL.nii.gz | head -n 1`
 	DWI_NegData=`ls $SourceDir/$SubjectId/unprocessed/3T/Diffusion/*DWI_dir95_LR.nii.gz | head -n 1`
 fi
 
-echo $T1wInputImages
-echo $T2wInputImages
-echo $MagnitudeInputName
-echo $PhaseInputName
-echo $DWI_NegData
-echo $DWI_PosData
-
 if [ "$T1wInputImages" == "" ] || [ "$T2wInputImages" == "" ] ||
-	[ "$MagnitudeInputName" == "" ] || [ "$PhaseInputName" == "" ] ||
+	[ "$T1T2_FMAP_MagImages" == "" ] || [ "$T1T2_FMAP_PhaseImages" == "" ] ||
 	[ "$DWI_NegData" == "" ] || [ "$DWI_PosData" == "" ] ; then
 	echo "Some Files Not Found"
 	exit -1
@@ -50,8 +45,8 @@ fi
 >&2 echo "Pre-Freesurfer"
 echo Pre-Freesurfer
 ${HCPPIPEDIR}/PreFreeSurfer/PreFreeSurferPipeline.sh \
- --path="$StudyFolder/$SubjectId" \
- --SubjectId="$SubjectId" \
+ --path="$StudyFolder" \
+ --subject="$SubjectId" \
  --t1="$T1wInputImages" \
  --t2="$T2wInputImages" \
  --t1template="$T1wTemplate" \
@@ -64,8 +59,8 @@ ${HCPPIPEDIR}/PreFreeSurfer/PreFreeSurferPipeline.sh \
  --template2mmmask="$Template2mmMask" \
  --brainsize="$BrainSize" \
  --fnirtconfig="$FNIRTConfig" \
- --fmapmag="$MagnitudeInputName" \
- --fmapphase="$PhaseInputName" \
+ --fmapmag="$T1T2_FMAP_MagImages" \
+ --fmapphase="$T1T2_FMAP_PhaseImages" \
  --echodiff="$TE" \
  --SEPhaseNeg="NONE" \
  --SEPhasePos="NONE" \
@@ -107,14 +102,14 @@ ${HCPPIPEDIR}/PostFreeSurfer/PostFreeSurferPipeline.sh \
 >&2 echo "Diffusion Processing"
 echo Diffusion Processing
 ${HCPPIPEDIR}/DiffusionPreprocessing/DiffPreprocPipeline.sh \
- --path="${StudyFolder}" \
- --subject="${SubjectId}" \
- --posData="${DWI_PosData}" \
- --negData="${DWI_NegData}" \
- --echospacing="${DWI_EchoSpacing}" \
- --PEdir=${DWI_PEdir} \
- --gdcoeffs="${DWI_Gdcoeffs}" \
- --printcom=$PRINTCOM
+--path="${StudyFolder}" \
+--subject="${SubjectId}" \
+--posData="${DWI_PosData}" \
+--negData="${DWI_NegData}" \
+--echospacing="${DWI_EchoSpacing}" \
+--PEdir=${DWI_PEdir} \
+--gdcoeffs="${DWI_Gdcoeffs}" \
+--printcom=$PRINTCOM
 
 >&2 echo "fMRI Task Processing"
 echo fMRI Task Processing
@@ -125,18 +120,18 @@ for (( i=0; i<${#Tasklist[@]}; i++ )) ; do
     UnwarpDir=${PhaseEncodinglist[$i]}
 	fMRIName=${Tasklist[$i]}
 
-    fMRITimeSeries="${StudyFolder}/${SubjectId}/unprocessed/3T/${fMRIName}/${SubjectId}_3T_${fMRIName}.nii.gz"
+    fMRITimeSeries="${SourceDir}/${SubjectId}/unprocessed/3T/${fMRIName}/${SubjectId}_3T_${fMRIName}.nii.gz"
 	
 	# A single band reference image (SBRef) is recommended if using multiband,
 	# set to NONE if you want to use the first volume of the timeseries for
 	# motion correction
-    fMRISBRef="${StudyFolder}/${SubjectId}/unprocessed/3T/${fMRIName}/${SubjectId}_3T_${fMRIName}_SBRef.nii.gz"
+    fMRISBRef="${SourceDir}/${SubjectId}/unprocessed/3T/${fMRIName}/${SubjectId}_3T_${fMRIName}_SBRef.nii.gz"
 
 	# For the spin echo field map volume with a negative phase encoding
 	# direction (LR in HCP data, AP in 7T HCP data), set to NONE if using
 	# regular FIELDMAP
-    SpinEchoPhaseEncodeNegative="${StudyFolder}/${SubjectId}/unprocessed/3T/${fMRIName}/${SubjectId}_3T_SpinEchoFieldMap_LR.nii.gz"
-    SpinEchoPhaseEncodePositive="${StudyFolder}/${SubjectId}/unprocessed/3T/${fMRIName}/${SubjectId}_3T_SpinEchoFieldMap_RL.nii.gz"
+    SpinEchoPhaseEncodeNegative="${SourceDir}/${SubjectId}/unprocessed/3T/${fMRIName}/${SubjectId}_3T_SpinEchoFieldMap_LR.nii.gz"
+    SpinEchoPhaseEncodePositive="${SourceDir}/${SubjectId}/unprocessed/3T/${fMRIName}/${SubjectId}_3T_SpinEchoFieldMap_RL.nii.gz"
 
     ${queuing_command} ${HCPPIPEDIR}/fMRIVolume/GenericfMRIVolumeProcessingPipeline.sh \
       --path=${StudyFolder} \
@@ -153,72 +148,72 @@ for (( i=0; i<${#Tasklist[@]}; i++ )) ; do
       --unwarpdir=${UnwarpDir} \
       --fmrires=${FMRI_FinalResolution} \
       --dcmethod="TOPUP" \
-      --gdcoeffs="NONE"\
+      --gdcoeffs="NONE" \
       --topupconfig=$FMRI_TopUpConfig \
       --printcom=$PRINTCOM
 done
 
-# MOVE TO MULTI SUBJECT
-#for FinalSmoothingFWHM in $SmoothingList ; do
-#  echo $FinalSmoothingFWHM
-#
-#  i=1
-#  for LevelTwoTask in $LevelTwoTaskList ; do
-#    echo "  ${LevelTwoTask}"
-#
-#    LevelOneTasks=`echo $LevelOneTasksList | cut -d " " -f $i`
-#    LevelOneFSFs=`echo $LevelOneFSFsList | cut -d " " -f $i`
-#    LevelTwoTask=`echo $LevelTwoTaskList | cut -d " " -f $i`
-#    LevelTwoFSF=`echo $LevelTwoFSFList | cut -d " " -f $i`
-#    for Subject in $Subjlist ; do
-#      echo "    ${Subject}"
-#
-#      if [ -n "${command_line_specified_run_local}" ] ; then
-#          echo "About to run ${HCPPIPEDIR}/TaskfMRIAnalysis/TaskfMRIAnalysis.sh"
-#          queuing_command=""
-#      else
-#          echo "About to use fsl_sub to queue or run ${HCPPIPEDIR}/TaskfMRIAnalysis/TaskfMRIAnalysis.sh"
-#          queuing_command="${FSLDIR}/bin/fsl_sub ${QUEUE}"
-#      fi
-#
-#      ${queuing_command} ${HCPPIPEDIR}/TaskfMRIAnalysis/TaskfMRIAnalysis.sh \
-#        --path=$StudyFolder \
-#        --subject=$Subject \
-#        --lvl1tasks=$LevelOneTasks \
-#        --lvl1fsfs=$LevelOneFSFs \
-#        --lvl2task=$LevelTwoTask \
-#        --lvl2fsf=$LevelTwoFSF \
-#        --lowresmesh=$LowResMesh \
-#        --grayordinatesres=$GrayOrdinatesResolution \
-#        --origsmoothingFWHM=$OriginalSmoothingFWHM \
-#        --confound=$Confound \
-#        --finalsmoothingFWHM=$FinalSmoothingFWHM \
-#        --temporalfilter=$TemporalFilter \
-#        --vba=$VolumeBasedProcessing
-#
-#  # The following lines are used for interactive debugging to set the positional parameters: $1 $2 $3 ...
-#
-#        echo "set -- --path=$StudyFolder \
-#        --subject=$Subject \
-#        --lvl1tasks=$LevelOneTasks \
-#        --lvl1fsfs=$LevelOneFSFs \
-#        --lvl2task=$LevelTwoTask \
-#        --lvl2fsf=$LevelTwoFSF \
-#        --lowresmesh=$LowResMesh \
-#        --grayordinatesres=$GrayOrdinatesResolution \
-#        --origsmoothingFWHM=$OriginalSmoothingFWHM \
-#        --confound=$Confound \
-#        --finalsmoothingFWHM=$FinalSmoothingFWHM \
-#        --temporalfilter=$TemporalFilter \
-#        --vba=$VolumeBasedProcessing"
-#
-#        echo ". ${EnvironmentScript}"
-#
-#    done
-#    i=$(($i+1))
-#  done
-#done
-
+### MOVE TO MULTI SUBJECT
+###for FinalSmoothingFWHM in $SmoothingList ; do
+###  echo $FinalSmoothingFWHM
+###
+###  i=1
+###  for LevelTwoTask in $LevelTwoTaskList ; do
+###    echo "  ${LevelTwoTask}"
+###
+###    LevelOneTasks=`echo $LevelOneTasksList | cut -d " " -f $i`
+###    LevelOneFSFs=`echo $LevelOneFSFsList | cut -d " " -f $i`
+###    LevelTwoTask=`echo $LevelTwoTaskList | cut -d " " -f $i`
+###    LevelTwoFSF=`echo $LevelTwoFSFList | cut -d " " -f $i`
+###    for Subject in $Subjlist ; do
+###      echo "    ${Subject}"
+###
+###      if [ -n "${command_line_specified_run_local}" ] ; then
+###          echo "About to run ${HCPPIPEDIR}/TaskfMRIAnalysis/TaskfMRIAnalysis.sh"
+###          queuing_command=""
+###      else
+###          echo "About to use fsl_sub to queue or run ${HCPPIPEDIR}/TaskfMRIAnalysis/TaskfMRIAnalysis.sh"
+###          queuing_command="${FSLDIR}/bin/fsl_sub ${QUEUE}"
+###      fi
+###
+###      ${queuing_command} ${HCPPIPEDIR}/TaskfMRIAnalysis/TaskfMRIAnalysis.sh \
+###        --path=$StudyFolder \
+###        --subject=$Subject \
+###        --lvl1tasks=$LevelOneTasks \
+###        --lvl1fsfs=$LevelOneFSFs \
+###        --lvl2task=$LevelTwoTask \
+###        --lvl2fsf=$LevelTwoFSF \
+###        --lowresmesh=$LowResMesh \
+###        --grayordinatesres=$GrayOrdinatesResolution \
+###        --origsmoothingFWHM=$OriginalSmoothingFWHM \
+###        --confound=$Confound \
+###        --finalsmoothingFWHM=$FinalSmoothingFWHM \
+###        --temporalfilter=$TemporalFilter \
+###        --vba=$VolumeBasedProcessing
+###
+###  # The following lines are used for interactive debugging to set the positional parameters: $1 $2 $3 ...
+###
+###        echo "set -- --path=$StudyFolder \
+###        --subject=$Subject \
+###        --lvl1tasks=$LevelOneTasks \
+###        --lvl1fsfs=$LevelOneFSFs \
+###        --lvl2task=$LevelTwoTask \
+###        --lvl2fsf=$LevelTwoFSF \
+###        --lowresmesh=$LowResMesh \
+###        --grayordinatesres=$GrayOrdinatesResolution \
+###        --origsmoothingFWHM=$OriginalSmoothingFWHM \
+###        --confound=$Confound \
+###        --finalsmoothingFWHM=$FinalSmoothingFWHM \
+###        --temporalfilter=$TemporalFilter \
+###        --vba=$VolumeBasedProcessing"
+###
+###        echo ". ${EnvironmentScript}"
+###
+###    done
+###    i=$(($i+1))
+###  done
+###done
+###
 ##### from Example
 ####Tasklist="tfMRI_EMOTION_RL tfMRI_EMOTION_LR"
 ####PhaseEncodinglist="x x-" #x for RL, x- for LR, y for PA, y- for AP
@@ -236,8 +231,8 @@ done
 ####    DistortionCorrection="TOPUP" #FIELDMAP or TOPUP, distortion correction is required for accurate processing
 ####    SpinEchoPhaseEncodeNegative="${StudyFolder}/${Subject}/unprocessed/3T/${fMRIName}/${Subject}_3T_SpinEchoFieldMap_LR.nii.gz" #For the spin echo field map volume with a negative phase encoding direction (LR in HCP data, AP in 7T HCP data), set to NONE if using regular FIELDMAP
 ####    SpinEchoPhaseEncodePositive="${StudyFolder}/${Subject}/unprocessed/3T/${fMRIName}/${Subject}_3T_SpinEchoFieldMap_RL.nii.gz" #For the spin echo field map volume with a positive phase encoding direction (RL in HCP data, PA in 7T HCP data), set to NONE if using regular FIELDMAP
-####    MagnitudeInputName="NONE" #Expects 4D Magnitude volume with two 3D timepoints, set to NONE if using TOPUP
-####    PhaseInputName="NONE" #Expects a 3D Phase volume, set to NONE if using TOPUP
+####    T1T2_FMAP_MagImages="NONE" #Expects 4D Magnitude volume with two 3D timepoints, set to NONE if using TOPUP
+####    T1T2_FMAP_PhaseImages="NONE" #Expects a 3D Phase volume, set to NONE if using TOPUP
 ####    DeltaTE="NONE" #2.46ms for 3T, 1.02ms for 7T, set to NONE if using TOPUP
 ####    FinalFMRIResolution="2" #Target final resolution of fMRI data. 2mm is recommended for 3T HCP data, 1.6mm for 7T HCP data (i.e. should match acquired resolution).  Use 2.0 or 1.0 to avoid standard FSL templates
 ####    # GradientDistortionCoeffs="${HCPPIPEDIR_Config}/coeff_SC72C_Skyra.grad" #Gradient distortion correction coefficents, set to NONE to turn off
@@ -260,8 +255,8 @@ done
 ####      --fmriscout=$fMRISBRef \
 ####      --SEPhaseNeg=$SpinEchoPhaseEncodeNegative \
 ####      --SEPhasePos=$SpinEchoPhaseEncodePositive \
-####      --fmapmag=$MagnitudeInputName \
-####      --fmapphase=$PhaseInputName \
+####      --fmapmag=$T1T2_FMAP_MagImages \
+####      --fmapphase=$T1T2_FMAP_PhaseImages \
 ####      --echospacing=$DwellTime \
 ####      --echodiff=$DeltaTE \
 ####      --unwarpdir=$UnwarpDir \
@@ -280,8 +275,8 @@ done
 ####      --fmriscout=$fMRISBRef \
 ####      --SEPhaseNeg=$SpinEchoPhaseEncodeNegative \
 ####      --SEPhasePos=$SpinEchoPhaseEncodePositive \
-####      --fmapmag=$MagnitudeInputName \
-####      --fmapphase=$PhaseInputName \
+####      --fmapmag=$T1T2_FMAP_MagImages \
+####      --fmapphase=$T1T2_FMAP_PhaseImages \
 ####      --echospacing=$DwellTime \
 ####      --echodiff=$DeltaTE \
 ####      --unwarpdir=$UnwarpDir \
