@@ -5,7 +5,7 @@ source $HCPPIPEDIR/SetUpHCPPipeline.sh
 
 #queuing_command="qsub -b "
 queuing_command="qsub"
-qsub_opts="-l h_vmem=8G -b yes -v HCPPIPEDIR=$HCPPIPEDIR"
+qsub_opts="-l h_vmem=16G -b yes -v HCPPIPEDIR=$HCPPIPEDIR"
 
 if [[ "$#" != 2 ]] && [[ "$#" != 3 ]] ; then
 	echo "Usage:"
