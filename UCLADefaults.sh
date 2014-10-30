@@ -92,10 +92,7 @@ T1T2_SE_TopUpConfig="${HCPPIPEDIR_Config}/b02b0.cnf"
 # Diffusion Weighted Imaging Settings
 ##############################################################################
 
-## TODO Fieldmap based Correction?
-
-DWI_NegImages=`ls $StudyFolder/$SubjectId/nii/*DWI_DIR98_AP_0.nii.gz | xargs | tr ' ' '@'`;
-DWI_PosImages=`ls $StudyFolder/$SubjectId/nii/*DWI_DIR98_PA_0.nii.gz | xargs | tr ' ' '@'`;
+DiffusionTypes=("DWI_DIR98_0" "DWI_DIR99_1")
 
 # Echo Spacing or Dwelltime of dMRI image, set to NONE if not used.
 # Dwelltime = 1000/(BandwidthPerPixelPhaseEncode * # of phase encoding samples):

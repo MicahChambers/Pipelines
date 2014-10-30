@@ -19,25 +19,22 @@ SourceDir=`readlink -f $SourceDir`
 source $HCPPIPEDIR/SetUpHCPPipeline.sh
 source $HCPPIPEDIR/HCPDefaults.sh
 
+DiffusionTypes=("${SubjectId}_3T_DWI_dir95" "${SubjectId}_3T_DWI_dir96" "${SubjectId}_3T_DWI_dir97")
+
 if [[ "$MULTIINPUTS" == "true" ]]; then
 	T1wInputImages=`ls $SourceDir/$SubjectId/unprocessed/3T/T1w*/$SubjectId*T1w*.nii.gz | xargs | tr ' ' '@'`;
 	T1T2_FMAP_MagImages=`ls $SourceDir/$SubjectId/unprocessed/3T/T1w*/$SubjectId*FieldMap_Magnitude.nii.gz | xargs | tr ' ' '@'`;
 	T1T2_FMAP_PhaseImages=`ls $SourceDir/$SubjectId/unprocessed/3T/T1w*/$SubjectId*FieldMap_Phase.nii.gz | xargs | tr ' ' '@'`;
 	T2wInputImages=`ls $SourceDir/$SubjectId/unprocessed/3T/T2w*/$SubjectId*T2w*.nii.gz | xargs | tr ' ' '@'`;
-	DWI_PosData=`ls $SourceDir/$SubjectId/unprocessed/3T/Diffusion/*DWI_dir95_RL.nii.gz | xargs | tr ' ' '@'`;
-	DWI_NegData=`ls $SourceDir/$SubjectId/unprocessed/3T/Diffusion/*DWI_dir95_LR.nii.gz | xargs | tr ' ' '@'`;
 else
 	T1wInputImages=`ls $SourceDir/$SubjectId/unprocessed/3T/T1w*/$SubjectId*T1w*.nii.gz | head -n 1`
 	T1T2_FMAP_MagImages=`ls $SourceDir/$SubjectId/unprocessed/3T/T1w*/$SubjectId*FieldMap_Magnitude.nii.gz | head -n 1`
 	T1T2_FMAP_PhaseImages=`ls $SourceDir/$SubjectId/unprocessed/3T/T1w*/$SubjectId*FieldMap_Phase.nii.gz | head -n 1`
 	T2wInputImages=`ls $SourceDir/$SubjectId/unprocessed/3T/T2w*/$SubjectId*T2w*.nii.gz | head -n 1`
-	DWI_PosData=`ls $SourceDir/$SubjectId/unprocessed/3T/Diffusion/*DWI_dir95_RL.nii.gz | head -n 1`
-	DWI_NegData=`ls $SourceDir/$SubjectId/unprocessed/3T/Diffusion/*DWI_dir95_LR.nii.gz | head -n 1`
 fi
 
 if [ "$T1wInputImages" == "" ] || [ "$T2wInputImages" == "" ] ||
-	[ "$T1T2_FMAP_MagImages" == "" ] || [ "$T1T2_FMAP_PhaseImages" == "" ] ||
-	[ "$DWI_NegData" == "" ] || [ "$DWI_PosData" == "" ] ; then
+	[ "$T1T2_FMAP_MagImages" == "" ] || [ "$T1T2_FMAP_PhaseImages" == "" ] ; then
 	echo "Some Files Not Found"
 	exit -1
 fi
@@ -133,15 +130,20 @@ then
 else
 	>&2 echo "Diffusion Processing"
 	echo Diffusion Processing
-	${HCPPIPEDIR}/DiffusionPreprocessing/DiffPreprocPipeline.sh \
-	--path="${StudyFolder}" \
-	--subject="${SubjectId}" \
-	--posData="${DWI_PosData}" \
-	--negData="${DWI_NegData}" \
-	--echospacing="${DWI_EchoSpacing}" \
-	--PEdir=${DWI_PEdir} \
-	--gdcoeffs="${DWI_Gdcoeffs}" \
-	--printcom=$PRINTCOM
+	for img in $DiffusionTypes; do 
+		DWI_Pos="$SourceDir/$SubjectId/unprocessed/3T/Diffusion/${img}_RL.nii.gz"
+		DWI_Neg="$SourceDir/$SubjectId/unprocessed/3T/Diffusion/${img}_LR.nii.gz"
+
+		${HCPPIPEDIR}/DiffusionPreprocessing/DiffPreprocPipeline.sh \
+		--path="${StudyFolder}" \
+		--subject="${SubjectId}" \
+		--posData="${DWI_Pos}" \
+		--negData="${DWI_Neg}" \
+		--echospacing="${DWI_EchoSpacing}" \
+		--PEdir=${DWI_PEdir} \
+		--gdcoeffs="${DWI_Gdcoeffs}" \
+		--printcom=$PRINTCOM
+	done
 	
 	echo '1' > $StudyFolder/$SubjectId/diffusion.done
 fi

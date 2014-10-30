@@ -49,37 +49,39 @@ else
 	# DWI
 	APCOUNT=0
 	PACOUNT=0
-	find ${StudyFolder}/$SubjectId/nii/ -type f -iname '*DWI*.nii.gz' -not -iname '*SBREF*.nii.gz' | 
+	find ${StudyFolder}/$SubjectId/nii/ -type f -iname '*DWI*.nii.gz' -not -iname '*SBREF*.nii.gz' | sort | 
 	while read line; do
 		tmp=${line%.nii.gz}
-		tmp=${tmp%_*}
-		if [[ $tmp == *AP* ]]; then
-			ln -v -s -T $line ${tmp}_${APCOUNT}.nii.gz
+		if [[ $tmp == *_AP_* ]]; then
+			tmp=${tmp%_AP_*}_${APCOUNT}_AP
+			ln -v -s -T $line $tmp.nii.gz
 			if [[ -e ${line%.nii.gz}.bval ]]; then
-				ln -s -T ${line%.nii.gz}.bval ${tmp}_${APCOUNT}.bval
-				ln -s -T ${line%.nii.gz}.bvec ${tmp}_${APCOUNT}.bvec
+				ln -s -T ${line%.nii.gz}.bval $tmp.bval
+				ln -s -T ${line%.nii.gz}.bvec $tmp.bvec
 			fi
 			APCOUNT=$((APCOUNT+1))
-		elif [[ $tmp == *PA* ]]; then
-			ln -s -T $line ${tmp}_${PACOUNT}.nii.gz
+		elif [[ $tmp == *_PA_* ]]; then
+			tmp=${tmp%_PA_*}_${PACOUNT}_PA
+			ln -s -T $line $tmp.nii.gz
 			if [[ -e ${line%.nii.gz}.bval ]]; then
-				ln -s -T ${line%.nii.gz}.bval ${tmp}_${PACOUNT}.bval
-				ln -s -T ${line%.nii.gz}.bvec ${tmp}_${PACOUNT}.bvec
+				ln -s -T ${line%.nii.gz}.bval $tmp.bval
+				ln -s -T ${line%.nii.gz}.bvec $tmp.bvec
 			fi
 			PACOUNT=$((PACOUNT+1))
 		fi
 	done
 	APCOUNT=0
 	PACOUNT=0
-	find ${StudyFolder}/$SubjectId/nii/ -type f -iname '*SBREF*.nii.gz' -iname '*DWI*.nii.gz' | 
+	find ${StudyFolder}/$SubjectId/nii/ -type f -iname '*SBREF*.nii.gz' -iname '*DWI*.nii.gz' | sort |
 	while read line; do
 		tmp=${line%.nii.gz}
-		tmp=${tmp%%_SBREF*}
-		if [[ $tmp == *AP* ]]; then
-			ln -v -s -T $line ${tmp}_${APCOUNT}_SBREF.nii.gz
+		if [[ $tmp == *_AP_* ]]; then
+			tmp=${tmp%_AP_*}_${APCOUNT}_AP
+			ln -v -s -T $line ${tmp}_SBREF.nii.gz
 			APCOUNT=$((APCOUNT+1))
-		elif [[ $tmp == *PA* ]]; then
-			ln -s -T $line ${tmp}_${PACOUNT}_SBREF.nii.gz
+		elif [[ $tmp == *_PA_* ]]; then
+			tmp=${tmp%_PA_*}_${PACOUNT}_PA
+			ln -s -T $line ${tmp}_SBREF.nii.gz
 			PACOUNT=$((PACOUNT+1))
 		fi
 	done
@@ -87,29 +89,31 @@ else
 	# FMRI
 	APCOUNT=0
 	PACOUNT=0
-	find ${StudyFolder}/$SubjectId/nii/ -type f -iname '*FMRI*.nii.gz' -not -iname '*SBREF*.nii.gz' | 
+	find ${StudyFolder}/$SubjectId/nii/ -type f -iname '*FMRI*.nii.gz' -not -iname '*SBREF*.nii.gz' | sort |
 	while read line; do
 		tmp=${line%.nii.gz}
-		tmp=${tmp%_*}
-		if [[ $tmp == *AP* ]]; then
-			ln -v -s -T $line ${tmp}_${APCOUNT}.nii.gz
+		if [[ $tmp == *_AP_* ]]; then
+			tmp=${tmp%_AP_*}_${APCOUNT}_AP
+			ln -s -T $line ${tmp}.nii.gz
 			APCOUNT=$((APCOUNT+1))
-		elif [[ $tmp == *PA* ]]; then
-			ln -s -T $line ${tmp}_${PACOUNT}.nii.gz
+		elif [[ $tmp == *_PA_* ]]; then
+			tmp=${tmp%_PA_*}_${PACOUNT}_PA
+			ln -s -T $line ${tmp}.nii.gz
 			PACOUNT=$((PACOUNT+1))
 		fi
 	done
 	APCOUNT=0
 	PACOUNT=0
-	find ${StudyFolder}/$SubjectId/nii/ -type f -iname '*SBREF*.nii.gz' -iname '*FMRI*.nii.gz' | 
+	find ${StudyFolder}/$SubjectId/nii/ -type f -iname '*SBREF*.nii.gz' -iname '*FMRI*.nii.gz' | sort | 
 	while read line; do
 		tmp=${line%.nii.gz}
-		tmp=${tmp%%_SBREF*}
-		if [[ $tmp == *AP* ]]; then
-			ln -v -s -T $line ${tmp}_${APCOUNT}_SBREF.nii.gz
+		if [[ $tmp == *_AP_* ]]; then
+			tmp=${tmp%_AP_*}_${APCOUNT}_AP
+			ln -v -s -T $line ${tmp}_SBREF.nii.gz
 			APCOUNT=$((APCOUNT+1))
-		elif [[ $tmp == *PA* ]]; then
-			ln -s -T $line ${tmp}_${PACOUNT}_SBREF.nii.gz
+		elif [[ $tmp == *_PA_* ]]; then
+			tmp=${tmp%_PA_*}_${PACOUNT}_PA
+			ln -s -T $line ${tmp}_SBREF.nii.gz
 			PACOUNT=$((PACOUNT+1))
 		fi
 	done
@@ -117,13 +121,15 @@ else
 	# SPin Echo Fieldmaps
 	APCOUNT=0
 	PACOUNT=0
-	find ${StudyFolder}/$SubjectId/nii/ -type f -name '*SPINECHOFIELDMAP*.nii.gz' | while read line; do 
+	find ${StudyFolder}/$SubjectId/nii/ -type f -name '*SPINECHOFIELDMAP*.nii.gz' | sort | 
+	while read line; do 
 		tmp=${line%.nii.gz}
-		tmp=${tmp%_*}
-		if [[ $tmp == *PA* ]]; then
+		if [[ $tmp == *_PA_* ]]; then
+			tmp=${tmp%_PA_*}_${PACOUNT}_PA
 			ln -v -s -T $line ${tmp}_${PACOUNT}.nii.gz
 			PACOUNT=$((PACOUNT+1))
-		elif [[ $tmp == *AP* ]]; then
+		elif [[ $tmp == *_AP_* ]]; then
+			tmp=${tmp%*_AP_*}_${APCOUNT}_AP
 			ln -s -T $line ${tmp}_${APCOUNT}.nii.gz
 			APCOUNT=$((APCOUNT+1))
 		fi
@@ -237,9 +243,7 @@ else
 	rm -f $StudyFolder/$SubjectId/genericfmri.done
 fi
 
-if [[ "${DWI_NegImages%@*}" == "" ]] && [[ "${DWI_PosImages%@*}" == "" ]]; then
-	echo "No DWI Images"
-elif [[ -e $StudyFolder/$SubjectId/diffusion.done ]] && 
+if [[ -e $StudyFolder/$SubjectId/diffusion.done ]] && 
 	[[ `head -n 1 $StudyFolder/$SubjectId/diffusion.done` -eq 1 ]]; then
    >&2 echo "Skipping Diffusion Processing, to force it, remove " \
    "$StudyFolder/$SubjectId/diffusion.done "
@@ -248,15 +252,19 @@ elif [[ -e $StudyFolder/$SubjectId/diffusion.done ]] &&
 else
 	>&2 echo "Diffusion Processing"
 	echo Diffusion Processing
-	${HCPPIPEDIR}/DiffusionPreprocessing/DiffPreprocPipeline.sh \
-	--path="${StudyFolder}" \
-	--subject="${SubjectId}" \
-	--posData="${DWI_PosImages}" \
-	--negData="${DWI_NegImages}" \
-	--echospacing="${DWI_EchoSpacing}" \
-	--PEdir=${DWI_PEdir} \
-	--gdcoeffs="${DWI_Gdcoeffs}" \
-	--printcom=$PRINTCOM
+	for img in $DiffusionTypes; do 
+		DWI_Neg=$StudyFolder/$SubjectId/nii/${img}_PA.nii.gz
+		DWI_Pos=$StudyFolder/$SubjectId/nii/${img}_AP.nii.gz
+		${HCPPIPEDIR}/DiffusionPreprocessing/DiffPreprocPipeline.sh \
+		--path="${StudyFolder}" \
+		--subject="${SubjectId}" \
+		--posData="${DWI_Pos}" \
+		--negData="${DWI_Neg}" \
+		--echospacing="${DWI_EchoSpacing}" \
+		--PEdir=${DWI_PEdir} \
+		--gdcoeffs="${DWI_Gdcoeffs}" \
+		--printcom=$PRINTCOM
+	done
 	
 	echo '1' > $StudyFolder/$SubjectId/diffusion.done
 fi
