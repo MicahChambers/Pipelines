@@ -25,11 +25,12 @@ if [[ -e $StudyFolder/$SubjectId/fileconvert.done ]] &&
 else
 	>&2 echo 'File Conversion Processing'
 	echo File Convesion Processing
+	rm -fr $StudyFolder/$SubjectId/nii
+	mkdir -p $StudyFolder/$SubjectId/nii
 	# Convert Images From Dicom
 	for dd in `ls -d $SourceDir/$SubjectId/*`; do
 		fname=$dd/`ls $dd -1 | head -n 1`
 		echo $fname;
-		mkdir -p $StudyFolder/$SubjectId/nii
 		dcm2nii -r n -x n -a n -d n -e n -f y -g y -i n -n y -p n -o $StudyFolder/$SubjectId/nii $fname
 		oname=`basename $fname`
 		oname=${oname%.*}
@@ -44,29 +45,34 @@ else
 	done
 
 	## Create Simlinks for fMRI Runs/ Spin Echo Images
+	
+	# DWI
 	APCOUNT=0
 	PACOUNT=0
-	find ${StudyFolder}/$SubjectId/nii/ -name '*RFMRI_REST*' -and -not -name '*SBREF*' | while read line; do
-		if [[ -h $line ]]; then
-			continue
-		fi
+	find ${StudyFolder}/$SubjectId/nii/ -type f -iname '*DWI*.nii.gz' -not -iname '*SBREF*.nii.gz' | 
+	while read line; do
 		tmp=${line%.nii.gz}
 		tmp=${tmp%_*}
 		if [[ $tmp == *AP* ]]; then
 			ln -v -s -T $line ${tmp}_${APCOUNT}.nii.gz
+			if [[ -e ${line%.nii.gz}.bval ]]; then
+				ln -s -T ${line%.nii.gz}.bval ${tmp}_${APCOUNT}.bval
+				ln -s -T ${line%.nii.gz}.bvec ${tmp}_${APCOUNT}.bvec
+			fi
 			APCOUNT=$((APCOUNT+1))
 		elif [[ $tmp == *PA* ]]; then
 			ln -s -T $line ${tmp}_${PACOUNT}.nii.gz
+			if [[ -e ${line%.nii.gz}.bval ]]; then
+				ln -s -T ${line%.nii.gz}.bval ${tmp}_${PACOUNT}.bval
+				ln -s -T ${line%.nii.gz}.bvec ${tmp}_${PACOUNT}.bvec
+			fi
 			PACOUNT=$((PACOUNT+1))
 		fi
 	done
-	
 	APCOUNT=0
 	PACOUNT=0
-	find ${StudyFolder}/$SubjectId/nii/ -name '*RFMRI_REST*SBREF*' | while read line; do
-		if [[ -h $line ]]; then
-			continue
-		fi
+	find ${StudyFolder}/$SubjectId/nii/ -type f -iname '*SBREF*.nii.gz' -iname '*DWI*.nii.gz' | 
+	while read line; do
 		tmp=${line%.nii.gz}
 		tmp=${tmp%%_SBREF*}
 		if [[ $tmp == *AP* ]]; then
@@ -78,12 +84,40 @@ else
 		fi
 	done
 	
+	# FMRI
 	APCOUNT=0
 	PACOUNT=0
-	find ${StudyFolder}/$SubjectId/nii/ -name '*SPINECHOFIELDMAP*' | while read line; do 
-		if [[ -h $line ]]; then 
-			continue 
+	find ${StudyFolder}/$SubjectId/nii/ -type f -iname '*FMRI*.nii.gz' -not -iname '*SBREF*.nii.gz' | 
+	while read line; do
+		tmp=${line%.nii.gz}
+		tmp=${tmp%_*}
+		if [[ $tmp == *AP* ]]; then
+			ln -v -s -T $line ${tmp}_${APCOUNT}.nii.gz
+			APCOUNT=$((APCOUNT+1))
+		elif [[ $tmp == *PA* ]]; then
+			ln -s -T $line ${tmp}_${PACOUNT}.nii.gz
+			PACOUNT=$((PACOUNT+1))
 		fi
+	done
+	APCOUNT=0
+	PACOUNT=0
+	find ${StudyFolder}/$SubjectId/nii/ -type f -iname '*SBREF*.nii.gz' -iname '*FMRI*.nii.gz' | 
+	while read line; do
+		tmp=${line%.nii.gz}
+		tmp=${tmp%%_SBREF*}
+		if [[ $tmp == *AP* ]]; then
+			ln -v -s -T $line ${tmp}_${APCOUNT}_SBREF.nii.gz
+			APCOUNT=$((APCOUNT+1))
+		elif [[ $tmp == *PA* ]]; then
+			ln -s -T $line ${tmp}_${PACOUNT}_SBREF.nii.gz
+			PACOUNT=$((PACOUNT+1))
+		fi
+	done
+	
+	# SPin Echo Fieldmaps
+	APCOUNT=0
+	PACOUNT=0
+	find ${StudyFolder}/$SubjectId/nii/ -type f -name '*SPINECHOFIELDMAP*.nii.gz' | while read line; do 
 		tmp=${line%.nii.gz}
 		tmp=${tmp%_*}
 		if [[ $tmp == *PA* ]]; then

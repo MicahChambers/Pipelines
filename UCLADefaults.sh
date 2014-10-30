@@ -94,8 +94,8 @@ T1T2_SE_TopUpConfig="${HCPPIPEDIR_Config}/b02b0.cnf"
 
 ## TODO Fieldmap based Correction?
 
-DWI_NegImages=`ls $StudyFolder/$SubjectId/nii/*DWI*DIR98AP.nii.gz | xargs | tr ' ' '@'`;
-DWI_PosImages=`ls $StudyFolder/$SubjectId/nii/*DWI*DIR98PA.nii.gz | xargs | tr ' ' '@'`;
+DWI_NegImages=`ls $StudyFolder/$SubjectId/nii/*DWI_DIR98_AP_0.nii.gz | xargs | tr ' ' '@'`;
+DWI_PosImages=`ls $StudyFolder/$SubjectId/nii/*DWI_DIR98_PA_0.nii.gz | xargs | tr ' ' '@'`;
 
 # Echo Spacing or Dwelltime of dMRI image, set to NONE if not used.
 # Dwelltime = 1000/(BandwidthPerPixelPhaseEncode * # of phase encoding samples):

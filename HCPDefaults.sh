@@ -123,8 +123,8 @@ FMRI_DistortionCorrection="TOPUP"
 FMRI_FinalResolution="2" 
 
 # Gradient distortion correction coefficents, set to NONE to turn off
-#GradientDistortionCoeffs="${HCPPIPEDIR_Config}/coeff_SC72C_Skyra.grad" 
-GradientDistortionCoeffs="NONE" # SEt to NONE to skip gradient distortion correction
+GradientDistortionCoeffs="/ifs/students/mchambers/coeff_SC72C_Skyra.grad" 
+#GradientDistortionCoeffs="NONE" # SEt to NONE to skip gradient distortion correction
 
 #Topup config if using TOPUP, set to NONE if using regular FIELDMAP
 FMRI_TopUpConfig="${HCPPIPEDIR_Config}/b02b0.cnf" 

@@ -1,5 +1,5 @@
 #!/bin/bash 
-
+set -x
 #echo "This script must be SOURCED to correctly setup the environment prior to running any of the other HCP scripts contained here"
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink

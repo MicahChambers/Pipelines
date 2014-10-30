@@ -150,10 +150,10 @@
 # Setup this script such that if any command exits with a non-zero value, the 
 # script itself exits and does not attempt any further processing.
 set -e
-
 # ------------------------------------------------------------------------------
 #  Load Function Libraries
 # ------------------------------------------------------------------------------
+source $HCPPIPEDIR/SetUpHCPPipeline.sh
 source $HCPPIPEDIR/global/scripts/log.shlib  # Logging related functions
 source $HCPPIPEDIR/global/scripts/opts.shlib # Command line option functions
 

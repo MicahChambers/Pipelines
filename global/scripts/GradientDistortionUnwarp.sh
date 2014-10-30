@@ -1,6 +1,6 @@
 #!/bin/bash 
 set -e
-
+set -x
 # Requirements for this script
 #  installed versions of: FSL (version 5.0.6) and HCP-gradunwarp (version 1.0.2)
 #  environment: FSLDIR, PATH to be able to find gradient_unwarp.py

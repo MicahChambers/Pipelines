@@ -230,6 +230,40 @@ elif [ $DistortionCorrection = "TOPUP" ] ; then
   else
       ${FSLDIR}/bin/fslmaths ${WD}/${ScoutInputFile}_undistorted -div ${BiasField} ${WD}/${ScoutInputFile}_undistorted2T1w_init.nii.gz 
   fi
+elif [ $DistortionCorrection = "NPL" ] ; then
+	UnwarpDim=`echo $UnwarpDir | tr -d '-'`
+	# rigid register T1 to fmri
+	${NPLDIR}/bin/nplRigidReg -m ${WD}/${T1wBrainImageFile}.nii.gz \
+			-f ${ScoutInputName}.nii.gz -M MI \
+			-o ${WD}/brain_fspace_noinit.nii.gz 
+
+	${NPLDIR}/bin/nplGuessOrient -m ${WD}/${T1wBrainImageFile}.nii.gz \
+			-f ${ScoutInputName}.nii.gz -M MI \
+			-o ${WD}/brain_init.nii.gz
+	${NPLDIR}/bin/nplRigidReg -m ${WD}/brain_init.nii.gz \
+			-f ${ScoutInputName}.nii.gz -M MI \
+			-o ${WD}/brain_fspace_init.nii.gz 
+
+	initMI=`${NPLDIR}/bin/nplCompare ${WD}/brain_fspace_init.nii.gz \
+			${ScoutInputName}.nii.gz -m mi`
+	noinitMI=`${NPLDIR}/bin/nplCompare ${WD}/brain_fspace_noinit.nii.gz \
+			${ScoutInputName}.nii.gz -m mi`
+
+	if [[ $initMI -gt $noinitMI ]]; then 
+		echo "Using Initialized Rigid Reg Result"
+		dcref=${WD}/brain_fspace_init.nii.gz 
+	else
+		echo "Using UnInitialized Rigid Reg Result"
+		dcref=${WD}/brain_fspace_init.nii.gz 
+	fi
+	
+	# rigid fmri to reference T1
+	${NPLDIR}/bin/nplDistortionCorr --moving ${ScoutInputName}.nii.gz \
+		--fixed ${dcref} --sigmas 4 --sigmas 2 --sigmas 0.7 --sigmas 0.1 \
+		--direction $UnwarpDim  --metric MI --jacreg 0.00001 --tpsreg 0.001 \
+		--transform ${WD}/npl_fmri_dist.nii.gz \
+		--out ${WD}/${ScoutInputName}_undist.nii.gz --bins 128 --radius 4 \
+		--bspline-space 12
 else
   echo "UNKNOWN DISTORTION CORRECTION METHOD"
   exit

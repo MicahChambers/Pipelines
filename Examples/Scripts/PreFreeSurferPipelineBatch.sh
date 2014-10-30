@@ -1,4 +1,5 @@
 #!/bin/bash 
+set -x 
 
 get_batch_options() {
     local arguments=($@)
@@ -33,9 +34,11 @@ get_batch_options() {
 
 get_batch_options $@
 
+qsub_opts="-l h_vmem=16G -b yes -v HCPPIPEDIR=$HCPPIPEDIR"
 StudyFolder="${HOME}/projects/Pipelines_ExampleData" #Location of Subject folders (named by subjectID)
 Subjlist="100307" #Space delimited list of subject IDs
-EnvironmentScript="${HOME}/projects/Pipelines/Examples/Scripts/SetUpHCPPipeline.sh" #Pipeline environment script
+#EnvironmentScript="${HOME}/projects/Pipelines/Examples/Scripts/SetUpHCPPipeline.sh" #Pipeline environment script
+EnvironmentScript="/ifs/students/mchambers/hcp_pipeline/SetUpHCPPipeline.sh" #Pipeline environment script
 
 if [ -n "${command_line_specified_study_folder}" ]; then
     StudyFolder="${command_line_specified_study_folder}"
@@ -158,8 +161,9 @@ for Subject in $Subjlist ; do
       echo "About to run ${HCPPIPEDIR}/PreFreeSurfer/PreFreeSurferPipeline.sh"
       queuing_command=""
   else
-      echo "About to use fsl_sub to queue or run ${HCPPIPEDIR}/PreFreeSurfer/PreFreeSurferPipeline.sh"
-      queuing_command="${FSLDIR}/bin/fsl_sub ${QUEUE}"
+#      echo "About to use fsl_sub to queue or run ${HCPPIPEDIR}/PreFreeSurfer/PreFreeSurferPipeline.sh"
+#      queuing_command="${FSLDIR}/bin/fsl_sub ${QUEUE}"
+      queuing_command="qsub $qsub_opts -wd $PWD ${QUEUE}"
   fi
 
   ${queuing_command} ${HCPPIPEDIR}/PreFreeSurfer/PreFreeSurferPipeline.sh \
