@@ -32,8 +32,8 @@ fi
 # Set Up DCM2NII
 export PATH=$PATH:/ifs/students/mchambers/mricron/
 
-# gradunwarp, from https://github.com/ksubramz/gradunwarp
-export PATH=$PATH:/ifs/students/mchambers/anaconda/lib/python2.7/site-packages/gradunwarp/core/
+# gradunwarp, from https://github.com/Washington-University/gradunwarp.git
+export PATH=$PATH:/ifs/students/mchambers/anaconda/bin/
 
 export HCPPIPEDIR_Templates=${HCPPIPEDIR}/global/templates
 export HCPPIPEDIR_Bin=${HCPPIPEDIR}/global/binaries

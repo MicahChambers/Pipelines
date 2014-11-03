@@ -71,7 +71,7 @@ else
 	 --t1samplespacing="$T1wSampleSpacing" \
 	 --t2samplespacing="$T2wSampleSpacing" \
 	 --unwarpdir="$T1UnwarpDir" \
-	 --gdcoeffs="$GradientDistortionCoeffs" \
+	 --gdcoeffs="${GradientDistortionCoeffs}" \
 	 --avgrdcmethod="$AvgrdcSTRING" \
 	 --topupconfig="NONE" \
 	 --printcom=$PRINTCOM
@@ -141,7 +141,7 @@ else
 		--negData="${DWI_Neg}" \
 		--echospacing="${DWI_EchoSpacing}" \
 		--PEdir=${DWI_PEdir} \
-		--gdcoeffs="${DWI_Gdcoeffs}" \
+		--gdcoeffs="${GradientDistortionCoeffs}" \
 		--printcom=$PRINTCOM
 	done
 	
@@ -197,7 +197,7 @@ else
 		SpinEchoPhaseEncodeNegative="${SourceDir}/${SubjectId}/unprocessed/3T/${fMRIName}/${SubjectId}_3T_SpinEchoFieldMap_LR.nii.gz"
 		SpinEchoPhaseEncodePositive="${SourceDir}/${SubjectId}/unprocessed/3T/${fMRIName}/${SubjectId}_3T_SpinEchoFieldMap_RL.nii.gz"
 
-		${queuing_command} ${HCPPIPEDIR}/fMRIVolume/GenericfMRIVolumeProcessingPipeline.sh \
+		${HCPPIPEDIR}/fMRIVolume/GenericfMRIVolumeProcessingPipeline.sh \
 		--path=${StudyFolder} \
 		--subject=${SubjectId} \
 		--fmriname=${fMRIName} \
@@ -212,9 +212,41 @@ else
 		--unwarpdir=${UnwarpDir} \
 		--fmrires=${FMRI_FinalResolution} \
 		--dcmethod="TOPUP" \
-		--gdcoeffs="NONE" \
+		--gdcoeffs="${GradientDistortionCoeffs}" \
 		--topupconfig=$FMRI_TopUpConfig \
 		--printcom=$PRINTCOM
+
+		# Needs to match what is in PostFreeSurfer, 32 is on average 2mm
+		# spacing between the vertices on the midthickness
+		LowResMesh="32" 
+
+		# Needs to match what is in fMRIVolume, i.e. 2mm for 3T HCP data and
+		# 1.6mm for 7T HCP data
+		FinalfMRIResolution="2" 
+		
+		# Recommended to be roughly the grayordinates spacing, i.e 2mm on HCP
+		# data 
+		SmoothingFWHM="2" 
+		
+		# Needs to match what is in PostFreeSurfer. 2mm gives the HCP standard
+		# grayordinates space with 91282 grayordinates.  Can be different from
+		# the FinalfMRIResolution (e.g. in the case of HCP 7T data at 1.6mm)
+		GrayordinatesResolution="2" 
+		
+		# RegName="MSMSulc" #MSMSulc is recommended, if binary is not available
+		# use FS (FreeSurfer)
+		RegName="FS"
+		
+		${HCPPIPEDIR}/fMRISurface/GenericfMRISurfaceProcessingPipeline.sh \
+			--path=$StudyFolder \
+			--subject=$SubjectId \
+			--fmriname=$fMRIName \
+			--lowresmesh=$LowResMesh \
+			--fmrires=$FinalfMRIResolution \
+			--smoothingFWHM=$SmoothingFWHM \
+			--grayordinatesres=$GrayordinatesResolution \
+			--regname=$RegName
+
 	done
 	
 	echo '1' > $StudyFolder/$SubjectId/genericfmri.done

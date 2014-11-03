@@ -52,8 +52,7 @@ BrainSize="150"
 FNIRTConfig="${HCPPIPEDIR_Config}/T1_2_MNI152_2mm.cnf" #FNIRT 2mm T1w Config
 
 # Location of Coeffs file or "NONE" to skip
-#GradientDistortionCoeffs="${HCPPIPEDIR_Config}/coeff_SC72C_Skyra.grad" 
-GradientDistortionCoeffs="NONE" # Set to NONE to skip gradient distortion correction
+GradientDistortionCoeffs="/ifs/students/mchambers/coeff_SC72C_Skyra.grad" 
 
 ##############################################################################
 # Diffusion Weighted Imaging Settings
@@ -69,12 +68,6 @@ DWI_EchoSpacing=0.00078
 # 1 for Left-Right Phase Encoding, 
 # 2 for Anterior-Posterior
 DWI_PEdir=1 
-
-# Config Settings
-# Gdcoeffs="${HCPPIPEDIR_Config}/coeff_SC72C_Skyra.grad" 
-# Coefficients that describe spatial variations of the scanner gradients. 
-# Use NONE if not available.
-DWI_Gdcoeffs="NONE" 
 
 #################################################################
 # Post Freesurfer
@@ -121,10 +114,6 @@ FMRI_DistortionCorrection="TOPUP"
 # 1.6mm for 7T HCP data (i.e. should match acquired resolution).
 # Use 2.0 or 1.0 to avoid standard FSL templates
 FMRI_FinalResolution="2" 
-
-# Gradient distortion correction coefficents, set to NONE to turn off
-GradientDistortionCoeffs="/ifs/students/mchambers/coeff_SC72C_Skyra.grad" 
-#GradientDistortionCoeffs="NONE" # SEt to NONE to skip gradient distortion correction
 
 #Topup config if using TOPUP, set to NONE if using regular FIELDMAP
 FMRI_TopUpConfig="${HCPPIPEDIR_Config}/b02b0.cnf" 

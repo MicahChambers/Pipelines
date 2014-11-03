@@ -189,7 +189,7 @@ else
 	--t1samplespacing="$T1wSampleSpacing" \
 	--t2samplespacing="$T2wSampleSpacing" \
 	--unwarpdir="$T1UnwarpDir" \
-	--gdcoeffs="$GradientDistortionCoeffs" \
+	--gdcoeffs="${GradientDistortionCoeffs}" \
 	--avgrdcmethod="$AvgrdcSTRING" \
 	--printcom=$PRINTCOM
 	 
@@ -262,7 +262,7 @@ else
 		--negData="${DWI_Neg}" \
 		--echospacing="${DWI_EchoSpacing}" \
 		--PEdir=${DWI_PEdir} \
-		--gdcoeffs="${DWI_Gdcoeffs}" \
+		--gdcoeffs="${GradientDistortionCoeffs}" \
 		--printcom=$PRINTCOM
 	done
 	
@@ -314,7 +314,7 @@ else
 		--unwarpdir=${UnwarpDir} \
 		--fmrires=${FMRI_FinalResolution} \
 		--dcmethod="TOPUP" \
-		--gdcoeffs="NONE" \
+		--gdcoeffs="${GradientDistortionCoeffs}" \
 		--topupconfig=$FMRI_TopUpConfig \
 		--printcom=$PRINTCOM
 	done
