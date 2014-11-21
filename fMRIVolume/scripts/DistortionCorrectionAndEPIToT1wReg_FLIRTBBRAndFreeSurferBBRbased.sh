@@ -256,7 +256,7 @@ elif [ $DistortionCorrection = "NPL" ] ; then
 		echo "Using UnInitialized Rigid Reg Result"
 		dcref=${WD}/brain_fspace_init.nii.gz 
 	fi
-	
+
 	# rigid fmri to reference T1
 	${NPLDIR}/bin/nplDistortionCorr --moving ${ScoutInputName}.nii.gz \
 		--fixed ${dcref} --sigmas 4 --sigmas 2 --sigmas 0.7 --sigmas 0.1 \
@@ -265,8 +265,20 @@ elif [ $DistortionCorrection = "NPL" ] ; then
 		--out ${WD}/${ScoutInputName}_undist.nii.gz --bins 128 --radius 4 \
 		--bspline-space 12
 else
-  echo "UNKNOWN DISTORTION CORRECTION METHOD"
-  exit
+  echo "NO DISTORTION CORRECTION METHOD SET"
+
+  ## Make Blank Output Files
+  
+  cp ${ScoutInputName}.nii.gz ${WD}/Scout.nii.gz
+
+  # register scout to T1w image using fieldmap
+  ${FSLDIR}/bin/epi_reg --epi=${WD}/Scout.nii.gz --t1=${T1wImage} --t1brain=${WD}/${T1wBrainImageFile} --out=${WD}/${ScoutInputFile}_undistorted 
+  ${FSLDIR}/bin/applywarp --rel --interp=spline -i ${ScoutInputName} -r ${T1wImage} -o ${WD}/${ScoutInputFile}_undistorted_1vol.nii.gz
+  ${FSLDIR}/bin/fslmaths ${WD}/${ScoutInputFile}_undistorted_1vol.nii.gz -div ${BiasField} ${WD}/${ScoutInputFile}_undistorted_1vol.nii.gz
+  ${FSLDIR}/bin/immv ${WD}/${ScoutInputFile}_undistorted_1vol.nii.gz ${WD}/${ScoutInputFile}_undistorted2T1w_init.nii.gz
+  
+  ###Jacobian Volume FAKED for Regular Fieldmaps (all ones) ###
+  ${FSLDIR}/bin/fslmaths ${T1wImage} -abs -add 1 -bin ${WD}/Jacobian2T1w.nii.gz
 fi
 
 

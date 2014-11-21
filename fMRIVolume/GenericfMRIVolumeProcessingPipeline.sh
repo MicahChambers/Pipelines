@@ -1,15 +1,15 @@
-#!/bin/bash 
+#!/bin/bash
 set -e
-
+set -x
 # Requirements for this script
-#  installed versions of: FSL (version 5.0.6), FreeSurfer (version 5.3.0-HCP) , gradunwarp (HCP version 1.0.2) 
+#  installed versions of: FSL (version 5.0.6), FreeSurfer (version 5.3.0-HCP) , gradunwarp (HCP version 1.0.2)
 #  environment: use SetUpHCPPipeline.sh  (or individually set FSLDIR, FREESURFER_HOME, HCPPIPEDIR, PATH - for gradient_unwarp.py)
 
-########################################## PIPELINE OVERVIEW ########################################## 
+########################################## PIPELINE OVERVIEW ##########################################
 
 # TODO
 
-########################################## OUTPUT DIRECTORIES ########################################## 
+########################################## OUTPUT DIRECTORIES ##########################################
 
 # TODO
 
@@ -17,6 +17,7 @@ set -e
 #  Load Function Libraries
 # --------------------------------------------------------------------------------
 
+source $HCPPIPEDIR/SetUpHCPPipeline.sh
 source $HCPPIPEDIR/global/scripts/log.shlib  # Logging related functions
 source $HCPPIPEDIR/global/scripts/opts.shlib # Command line option functions
 
@@ -98,7 +99,7 @@ QAImage="T1wMulEPI"
 JacobianOut="Jacobian"
 
 
-########################################## DO WORK ########################################## 
+########################################## DO WORK ##########################################
 
 T1wFolder="$Path"/"$Subject"/"$T1wFolder"
 AtlasSpaceFolder="$Path"/"$Subject"/"$AtlasSpaceFolder"
@@ -130,7 +131,7 @@ if [ ! $GradientDistortionCoeffs = "NONE" ] ; then
 	--out="$fMRIFolder"/"$NameOffMRI"_gdc \
 	--owarp="$fMRIFolder"/"$NameOffMRI"_gdc_warp
 
-    log_Msg "mkdir -p ${fMRIFolder}/${ScoutName}_GradientDistortionUnwarp"	
+    log_Msg "mkdir -p ${fMRIFolder}/${ScoutName}_GradientDistortionUnwarp"
      mkdir -p "$fMRIFolder"/"$ScoutName"_GradientDistortionUnwarp
      ${RUN} "$GlobalScripts"/GradientDistortionUnwarp.sh \
 	 --workingdir="$fMRIFolder"/"$ScoutName"_GradientDistortionUnwarp \
@@ -155,7 +156,7 @@ ${RUN} "$PipelineScripts"/MotionCorrection_FLIRTbased.sh \
     "$fMRIFolder"/"$NameOffMRI"_mc \
     "$fMRIFolder"/"$MovementRegressor" \
     "$fMRIFolder"/"$MotionMatrixFolder" \
-    "$MotionMatrixPrefix" 
+    "$MotionMatrixPrefix"
 
 #EPI Distortion Correction and EPI to T1w Registration
 log_Msg "EPI Distortion Correction and EPI to T1w Registration"
@@ -187,8 +188,8 @@ ${RUN} ${PipelineScripts}/DistortionCorrectionAndEPIToT1wReg_FLIRTBBRAndFreeSurf
     --qaimage=${fMRIFolder}/${QAImage} \
     --method=${DistortionCorrection} \
     --topupconfig=${TopupConfig} \
-    --ojacobian=${fMRIFolder}/${JacobianOut} 
-    
+    --ojacobian=${fMRIFolder}/${JacobianOut}
+
 #One Step Resampling
 log_Msg "One Step Resampling"
 log_Msg "mkdir -p ${fMRIFolder}/OneStepResampling"
@@ -214,7 +215,7 @@ ${RUN} ${PipelineScripts}/OneStepResampling.sh \
     --oscout=${fMRIFolder}/${NameOffMRI}_SBRef_nonlin \
     --jacobianin=${fMRIFolder}/${JacobianOut} \
     --ojacobian=${fMRIFolder}/${JacobianOut}_MNI.${FinalfMRIResolution}
-    
+
 #Intensity Normalization and Bias Removal
 log_Msg "Intensity Normalization and Bias Removal"
 ${RUN} ${PipelineScripts}/IntensityNormalization.sh \
